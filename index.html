@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1.0">
+  <title>Weather App</title>
+  <link href="http://fonts.googleapis.com/css?family=Montserrat:400,700,inherit,400" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="css/standardize.css">
+  <link rel="stylesheet" href="css/index.css">
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+</head>
+<body class="body page-index clearfix">
+  <div class="select-city">
+      Select City:
+      <input type="text" class="city" value="">
+      <button id="button" class="button">Cek</button>
+  </div>
+  <div class="container clearfix">
+    <p class="the-weather"></p>
+    <p class="location"></p>
+    <p class="at"></p>
+    <p class="is"></p>
+    <p class="temperature"></p>
+  </div>
+</body>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+  <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+  <script type="text/javascript">
+    $(function () {
+      $( ".city" ).autocomplete({
+        source: function( request, response ) {
+          $.ajax({
+            url: "php/city.php/type=city",
+            dataType: "json",
+            data: {
+                city: request.term
+            },
+            success: function( data ) {
+                response( data );
+            }
+          });
+        },
+        minLength: 1,
+        appendTo : "#menu1",
+        select: function( event, ui ) {
+          $( ".city" ).val( ui.item.city );
+          return false;
+        },
+        open: function() {
+            $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
+        },
+        close: function() {
+            $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+        }
+      }).data( "ui-autocomplete" )._renderItem = function( ul, item ) {
+        return $( "<li></li>" )
+          .data( "ui-autocomplete-item", item )
+          .append( "<a>" + item.city+ "</a>   " )
+          .appendTo( ul );
+      };
+    });
+    
+    $(".button").on("click", function(){
+      var city_value = $(".city").val();
+      $(".the-weather").text("The Weather of ");
+      $(".location").text(city_value);
+      $(".is").text("is");
+      
+        $.ajax({
+          url: 'php/city.php',
+          type: 'post',
+          data: {
+            'action'  : 'city',
+            'city_value': city_value,
+          },
+          success: function(data, status) {
+            if (status == 'success') {
+             var obj    = JSON.parse(data);
+             var weather = obj.query.results.channel.item.forecast[0].text;
+             var weather_date = obj.query.results.channel.item.forecast[0].date;
+             var weather_code = obj.query.results.channel.item.forecast[0].code;
+             var weather_day = obj.query.results.channel.item.forecast[0].day;
+             $(".at").text("at " + weather_date);
+             $(".temperature").text(weather);
+              console.log(obj.query.results.channel.item.forecast[0]);
+           }
+          },
+          error: function(xhr, desc, err) {
+            console.log(xhr);
+            console.log("Details: " + desc + "\nError:" + err);
+          }
+        });
+    });
+  </script>
+</html>
